@@ -1,12 +1,14 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import { HiMail } from "react-icons/hi";
+import { HiMail, HiCheckCircle, HiXCircle } from "react-icons/hi";
+import emailjs from "@emailjs/browser";
 
 const Contact = () => {
   const formRef = useRef();
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [form, setForm] = useState({ user_name: "", user_email: "", message: "" });
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState({ type: "", message: "" });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,13 +18,35 @@ const Contact = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate sending (replace with EmailJS or your backend later)
-    setTimeout(() => {
-      setLoading(false);
-      alert("Thank you! I will get back to you as soon as possible.");
-      setForm({ name: "", email: "", message: "" });
-    }, 1000);
+    setStatus({ type: "", message: "" });
+
+    // Your EmailJS credentials
+    emailjs
+      .sendForm(
+        "service_d69xhw7",    // Service ID
+        "template_3rxh7yf",   // Template ID
+        formRef.current,
+        "gM7fZ_33boJ5KGAeb"   // Public Key
+      )
+      .then(
+        (result) => {
+          console.log("SUCCESS!", result.text);
+          setLoading(false);
+          setStatus({
+            type: "success",
+            message: "Thank you! I will get back to you as soon as possible.",
+          });
+          setForm({ user_name: "", user_email: "", message: "" });
+        },
+        (error) => {
+          console.log("FAILED...", error.text);
+          setLoading(false);
+          setStatus({
+            type: "error",
+            message: "Something went wrong. Please try again or email me directly.",
+          });
+        }
+      );
   };
 
   const socialLinks = [
@@ -59,8 +83,8 @@ const Contact = () => {
               <span className="text-white font-medium mb-4">Your Name</span>
               <input
                 type="text"
-                name="name"
-                value={form.name}
+                name="user_name"
+                value={form.user_name}
                 onChange={handleChange}
                 placeholder="What's your name?"
                 className="bg-tertiary py-4 px-6 placeholder:text-secondary text-white rounded-lg outline-none border-none font-medium focus:ring-2 focus:ring-accent transition-all"
@@ -72,8 +96,8 @@ const Contact = () => {
               <span className="text-white font-medium mb-4">Your Email</span>
               <input
                 type="email"
-                name="email"
-                value={form.email}
+                name="user_email"
+                value={form.user_email}
                 onChange={handleChange}
                 placeholder="What's your email?"
                 className="bg-tertiary py-4 px-6 placeholder:text-secondary text-white rounded-lg outline-none border-none font-medium focus:ring-2 focus:ring-accent transition-all"
@@ -94,11 +118,54 @@ const Contact = () => {
               />
             </label>
 
+            {/* Status Message */}
+            {status.message && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex items-center gap-2 p-4 rounded-lg ${
+                  status.type === "success"
+                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                    : "bg-red-500/20 text-red-400 border border-red-500/30"
+                }`}
+              >
+                {status.type === "success" ? (
+                  <HiCheckCircle className="text-xl" />
+                ) : (
+                  <HiXCircle className="text-xl" />
+                )}
+                {status.message}
+              </motion.div>
+            )}
+
             <button
               type="submit"
-              className="bg-tertiary py-3 px-8 outline-none w-fit text-white font-bold shadow-md shadow-primary rounded-xl hover:bg-accent hover:text-primary transition-all duration-300 border border-accent/30"
+              disabled={loading}
+              className="bg-tertiary py-3 px-8 outline-none w-fit text-white font-bold shadow-md shadow-primary rounded-xl hover:bg-accent hover:text-primary transition-all duration-300 border border-accent/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {loading ? "Sending..." : "Send Message"}
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Sending...
+                </>
+              ) : (
+                "Send Message"
+              )}
             </button>
           </form>
         </motion.div>
