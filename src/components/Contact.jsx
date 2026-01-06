@@ -20,13 +20,13 @@ const Contact = () => {
     setLoading(true);
     setStatus({ type: "", message: "" });
 
-    // Your EmailJS credentials
+    // Using environment variables for security (Vite uses VITE_ prefix)
     emailjs
       .sendForm(
-        "service_d69xhw7",    // Service ID
-        "template_3rxh7yf",   // Template ID
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
         formRef.current,
-        "gM7fZ_33boJ5KGAeb"   // Public Key
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
       )
       .then(
         (result) => {
