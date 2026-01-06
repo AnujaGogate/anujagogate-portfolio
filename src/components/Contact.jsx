@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { HiMail, HiCheckCircle, HiXCircle } from "react-icons/hi";
@@ -10,6 +10,15 @@ const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
 
+  // Debug: Check if env variables are loaded (remove in production)
+  useEffect(() => {
+    console.log("EmailJS Config:", {
+      serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY ? "✓ Loaded" : "✗ Missing",
+    });
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -20,14 +29,25 @@ const Contact = () => {
     setLoading(true);
     setStatus({ type: "", message: "" });
 
-    // Using environment variables for security (Vite uses VITE_ prefix)
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    // Check if env variables exist
+    if (!serviceId || !templateId || !publicKey) {
+      console.error("Missing EmailJS environment variables!");
+      setLoading(false);
+      setStatus({
+        type: "error",
+        message: "Configuration error. Please contact me directly via email.",
+      });
+      return;
+    }
+
+    console.log("Attempting to send email...");
+
     emailjs
-      .sendForm(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        formRef.current,
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      )
+      .sendForm(serviceId, templateId, formRef.current, publicKey)
       .then(
         (result) => {
           console.log("SUCCESS!", result.text);
@@ -39,11 +59,11 @@ const Contact = () => {
           setForm({ user_name: "", user_email: "", message: "" });
         },
         (error) => {
-          console.log("FAILED...", error.text);
+          console.error("FAILED...", error);
           setLoading(false);
           setStatus({
             type: "error",
-            message: "Something went wrong. Please try again or email me directly.",
+            message: `Failed to send: ${error.text || "Unknown error"}. Please email me directly.`,
           });
         }
       );
