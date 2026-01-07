@@ -4,19 +4,33 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { HiMail, HiCheckCircle, HiXCircle } from "react-icons/hi";
 import emailjs from "@emailjs/browser";
 
+// ============================================================
+// EmailJS Configuration - Safe to expose in frontend code
+// ============================================================
+// These are PUBLIC keys designed for client-side use.
+// Security is handled by EmailJS through:
+//   1. Domain restrictions (whitelist your domain in EmailJS dashboard)
+//   2. Rate limiting (prevents spam)
+//   3. Optional CAPTCHA verification
+// ============================================================
+const EMAILJS_SERVICE_ID = "service_htts2ze";
+const EMAILJS_TEMPLATE_ID = "template_3rxh7yf";
+const EMAILJS_PUBLIC_KEY = "gM7fZ_33boJ5KGAeb";
+
 const Contact = () => {
   const formRef = useRef();
   const [form, setForm] = useState({ user_name: "", user_email: "", message: "" });
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
 
-  // Debug: Check if env variables are loaded (remove in production)
+  // Initialize EmailJS on component mount (required for some versions)
   useEffect(() => {
-    console.log("EmailJS Config:", {
-      serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
-      templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-      publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY ? "✓ Loaded" : "✗ Missing",
-    });
+    try {
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+      console.log("[EmailJS] Initialized successfully");
+    } catch (err) {
+      console.error("[EmailJS] Init error:", err);
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -24,49 +38,48 @@ const Contact = () => {
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Debug: Verify function is being called
+    console.log("[Contact] handleSubmit triggered");
+    console.log("[Contact] Form data:", form);
+    
     setLoading(true);
     setStatus({ type: "", message: "" });
 
-    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-    // Check if env variables exist
-    if (!serviceId || !templateId || !publicKey) {
-      console.error("Missing EmailJS environment variables!");
+    try {
+      console.log("[EmailJS] Sending email...");
+      
+      const result = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          from_name: form.user_name,
+          from_email: form.user_email,
+          to_name: "Anuja",
+          message: form.message,
+          reply_to: form.user_email,
+        },
+        EMAILJS_PUBLIC_KEY
+      );
+      
+      console.log("[EmailJS] SUCCESS!", result.status, result.text);
+      setLoading(false);
+      setStatus({
+        type: "success",
+        message: "Thank you! I will get back to you as soon as possible.",
+      });
+      setForm({ user_name: "", user_email: "", message: "" });
+      
+    } catch (error) {
+      console.error("[EmailJS] FAILED!", error);
       setLoading(false);
       setStatus({
         type: "error",
-        message: "Configuration error. Please contact me directly via email.",
+        message: `Failed: ${error?.text || error?.message || "Unknown error. Check console."}`,
       });
-      return;
     }
-
-    console.log("Attempting to send email...");
-
-    emailjs
-      .sendForm(serviceId, templateId, formRef.current, publicKey)
-      .then(
-        (result) => {
-          console.log("SUCCESS!", result.text);
-          setLoading(false);
-          setStatus({
-            type: "success",
-            message: "Thank you! I will get back to you as soon as possible.",
-          });
-          setForm({ user_name: "", user_email: "", message: "" });
-        },
-        (error) => {
-          console.error("FAILED...", error);
-          setLoading(false);
-          setStatus({
-            type: "error",
-            message: `Failed to send: ${error.text || "Unknown error"}. Please email me directly.`,
-          });
-        }
-      );
   };
 
   const socialLinks = [
