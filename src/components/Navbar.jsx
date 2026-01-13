@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-scroll";
 
+// Get the correct base URL for GitHub Pages deployment
+const BASE_URL = import.meta.env.BASE_URL;
+
 const Navbar = () => {
   const [active, setActive] = useState("");
   const [toggle, setToggle] = useState(false);
@@ -110,7 +113,7 @@ const Navbar = () => {
             {resumeOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-tertiary border border-gray-700 rounded-lg shadow-xl overflow-hidden z-50">
                 <a
-                  href="/resume.pdf"
+                  href={`${BASE_URL}resume.pdf`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-accent/20 hover:text-white transition-colors cursor-pointer"
@@ -124,7 +127,7 @@ const Navbar = () => {
                 </a>
                 
                 <a
-                  href="/resume.pdf"
+                  href={`${BASE_URL}resume.pdf`}
                   download="Anuja_Gogate_Resume.pdf"
                   className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-accent/20 hover:text-white transition-colors cursor-pointer border-t border-gray-700"
                   onClick={() => setResumeOpen(false)}
@@ -183,7 +186,7 @@ const Navbar = () => {
               {/* Mobile Resume Links */}
               <li className="pt-4 border-t border-gray-600 w-full space-y-3">
                 <a 
-                  href="/resume.pdf" 
+                  href={`${BASE_URL}resume.pdf`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-secondary hover:text-white font-bold text-[14px] transition-colors"
@@ -191,7 +194,7 @@ const Navbar = () => {
                   View Resume
                 </a>
                 <a 
-                  href="/resume.pdf" 
+                  href={`${BASE_URL}resume.pdf`}
                   download="Anuja_Gogate_Resume.pdf"
                   className="block text-accent hover:text-accent/80 font-bold text-[14px] transition-colors"
                 >
